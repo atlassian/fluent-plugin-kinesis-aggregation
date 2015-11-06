@@ -1,6 +1,27 @@
-# Fluent Plugin for Amazon Kinesis
+# Fluent Plugin for Amazon Kinesis producing KPL records
 
- [![Build Status](https://travis-ci.org/awslabs/aws-fluent-plugin-kinesis.svg?branch=master)](https://travis-ci.org/awslabs/aws-fluent-plugin-kinesis)
+## Before you start...
+
+This is a rewrite of [aws-fluent-plugin-kinesis](https://github.com/awslabs/aws-fluent-plugin-kinesis) to implement
+a different shipment method using the
+[KPL aggregation format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md).
+
+The basic idea is to have one PutRecord === one chunk. This has a number of advantages:
+
+- much less complexity in plugin (less CPU/memory)
+- by aggregating, we increase the throughput and decrease the cost
+- since a single chunk either succeeds or fails,
+  we get to use fluentd's more complex/complete retry mechanism
+  (which is also exposed in the monitor). The existing retry mechanism
+  has [unfortunate issues under heavy load](https://github.com/awslabs/aws-fluent-plugin-kinesis/issues/42)
+- we get ordering within a chunk without having to rely on sequence
+  numbers (though not overall ordering)
+
+However, there are drawbacks:
+
+- you have to use a KCL library to ingest
+- you can't use a calculated partition key (based on the record);
+  essentially, you need to use a random partition key
 
 ## Overview
 
@@ -9,22 +30,11 @@ that sends events to [Amazon Kinesis](https://aws.amazon.com/kinesis/).
 
 ## Installation
 
-This fluentd plugin is available as the `fluent-plugin-kinesis` gem from RubyGems.
-
-    gem install fluent-plugin-kinesis
-
-Or you can install this plugin for [td-agent](https://github.com/treasure-data/td-agent) as:
-
-    fluent-gem install fluent-plugin-kinesis
-
-If you would like to build by yourself and install, please see the section below.
-Your need [bundler](http://bundler.io/) for this.
-
 In case of using with Fluentd:
 Fluentd will be also installed via the process below.
 
-    git clone https://github.com/awslabs/aws-fluent-plugin-kinesis.git
-    cd aws-fluent-plugin-kinesis
+    git clone https://github.com/atlassian/fluent-plugin-kinesis-aggregation.git
+    cd fluent-plugin-kinesis-aggregation
     bundle install
     rake build
     rake install
@@ -32,19 +42,19 @@ Fluentd will be also installed via the process below.
 Also, you can use this plugin with td-agent:
 You have to install td-agent before installing this plugin.
 
-    git clone https://github.com/awslabs/aws-fluent-plugin-kinesis.git
-    cd aws-fluent-plugin-kinesis
+    git clone https://github.com/atlassian/fluent-plugin-kinesis-aggregation.git
+    cd fluent-plugin-kinesis-aggregation
     bundle install
     rake build
-    fluent-gem install pkg/fluent-plugin-kinesis
+    fluent-gem install pkg/fluent-plugin-kinesis-aggregation
 
 Or just download specify your Ruby library path.
 Below is the sample for specifying your library path via RUBYLIB.
 
-    git clone https://github.com/awslabs/aws-fluent-plugin-kinesis.git
-    cd aws-fluent-plugin-kinesis
+    git clone https://github.com/atlassian/fluent-plugin-kinesis-aggregation.git
+    cd fluent-plugin-kinesis-aggregation
     bundle install
-    export RUBYLIB=$RUBYLIB:/path/to/aws-fluent-plugin-kinesis/lib
+    export RUBYLIB=$RUBYLIB:/path/to/fluent-plugin-kinesis-aggregation/lib
 
 ## Dependencies
 
@@ -86,7 +96,7 @@ We support all options which AWS SDK for Ruby supports.
 
 ### type
 
-Use the word 'kinesis'.
+Use the word 'kinesis-aggregation'.
 
 ### stream_name
 
@@ -110,7 +120,7 @@ Use this option for cross account access.
 A unique identifier that is used by third parties when
 [assuming roles](http://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html) in their customers' accounts.
 Use this option with `role_arn` for third party cross account access.
-For detail, please see [How to Use an External ID When Granting Access to Your AWS Resources to a Third Party](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
+For details, please see [How to Use an External ID When Granting Access to Your AWS Resources to a Third Party](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
 
 ### region
 
@@ -119,68 +129,24 @@ It should be in form like "us-east-1", "us-west-2".
 Refer to [Regions and Endpoints in AWS General Reference](http://docs.aws.amazon.com/general/latest/gr/rande.html#ak_region)
 for supported regions.
 
-### ensure_stream_connection
-
-When enabled, the plugin checks and ensures a connection to the stream you are using by [DescribeStream](http://docs.aws.amazon.com/kinesis/latest/APIReference/API_DescribeStream.html) and throws exception if it fails. Enabled by default.
-
 ### http_proxy
 
 Proxy server, if any.
 It should be in form like "http://squid:3128/"
 
-### random_partition_key
+### fixed_partition_key
 
-Boolean. If true, the plugin uses randomly generated
-partition key for each record. Note that this parameter
-overrides *partition_key*, *partition_key_expr*,
-*explicit_hash_key* and *explicit_hash_key_expr*.
-
-### partition_key
-
-A key to extract partition key from JSON object.
-
-### partition_key_expr
-
-A Ruby expression to extract partition key from JSON object.
-We treat your expression as below.
-
-    a_proc = eval(sprintf('proc {|record| %s }', YOUR_EXPRESSION))
-    a_proc.call(record)
-
-You should write your Ruby expression that receives input data
-as a variable 'record', process it and return it. The returned
-value will be used as a partition key. For use case example,
-see 'Configuration examples' part.
-
-### explicit_hash_key
-
-A key to extract explicit hash key from JSON object.
-Explicit hash key is hash value used to explicitly
-determine the shard the data record is assigned to
-by overriding the partition key hash.
-
-### explicit_hash_key_expr
-
-A Ruby expression to extract explicit hash key from JSON object.
-Your expression will be treat in the same way as we treat partition_key_expr.
-
-### order_events
-
-Boolean. By enabling it, you can strictly order events in Amazon Kinesis,
-according to arrival of events. Without this, events will be coarsely ordered
-based on arrival time. For detail,
-see [Using the Amazon Kinesis Service API](http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-api-java.html#kinesis-using-api-defn-sequence-number).
-
-Please note that if you set *detach_process* or *num_threads greater than 1*,
-this option will be ignored.
+Instead of using a random partition key, used a fixed one. This
+forces all writes to a specific shard, and if you're using
+a single thread/process will probably keep event ordering
+(not recommended - watch out for hot shards!).
 
 ### detach_process
 
 Integer. Optional. This defines the number of parallel processes to start.
 This can be used to increase throughput by allowing multiple processes to
-execute the plugin at once. This cannot be used together with **order_events**.
-Setting this option to > 0 will cause the plugin to run in a separate
-process. The default is 0.
+execute the plugin at once. Setting this option to > 0 will cause the plugin
+to run in a separate process. The default is 0.
 
 ### num_threads
 
@@ -193,25 +159,6 @@ emitting with threads will improve throughput.
 This option can be used to parallelize writes into the output(s)
 designated by the output plugin. The default is 1.
 Also you can use this option with *detach_process*.
-
-### retries_on_putrecords
-
-Integer, default is 3. When **order_events** is false, the plugin will put multiple
-records to Amazon Kinesis in batches using PutRecords. A set of records in a batch
-may fail for reasons documented in the Kinesis Service API Reference for PutRecords.
-Failed records will be retried **retries_on_putrecords** times. If a record
-fails all retries an error log will be emitted.
-
-### use_yajl
-
-Boolean, default is false.
-In case you find error `Encoding::UndefinedConversionError` with multibyte texts, you can avoid that error with this option.
-
-### zlib_compression
-
-Boolean, default is false.
-Zlib compresses the message data blob.
-Each zlib compressed message must remain within megabyte in size.
 
 ### debug
 
@@ -229,11 +176,11 @@ Assume that the JSON object below is coming to with tag 'your_tag'.
 
 ### Simply putting events to Amazon Kinesis with a partition key
 
-In this example, simply a value 'foo' will be used as partition key,
+In this example, a value 'foo' will be used as the partition key,
 then events will be sent to the stream specified in 'stream_name'.
 
     <match your_tag>
-    type kinesis
+    type kinesis-aggregation
 
     stream_name YOUR_STREAM_NAME
 
@@ -242,66 +189,20 @@ then events will be sent to the stream specified in 'stream_name'.
 
     region us-east-1
 
-    partition_key name
-    </match>
+    fixed_partition_key foo
 
-### Using partition_key_expr to add specific prefix to partition key
-
-In this example, we add partition_key_expr to the example above.
-This expression adds string 'some_prefix-' to partition key 'name',
-then partition key finally will be 'some_prefix-foo'.
-
-With specifying parition_key and parition_key_expr both,
-the extracted value for partition key from JSON object will be
-passed to your Ruby expression as a variable 'record'.
-
-    <match your_tag>
-    type kinesis
-
-    stream_name YOUR_STREAM_NAME
-
-    aws_key_id YOUR_AWS_ACCESS_KEY
-    aws_sec_key YOUR_SECRET_KEY
-
-    region us-east-1
-
-    partition_key name
-    partition_key_expr 'some_prefix-' + record
-    </match>
-
-### Using partition_key_expr to extract a value for partition key
-
-In this example, we use only partition_key_expr to extract
-a value for partition key. It will be 'bar'.
-
-Specifying partition_key_expr without partition_key,
-hash object that is converted from whole JSON object will be
-passed to your Ruby expression as a variable 'record'.
-
-    <match your_tag>
-    type kinesis
-
-    stream_name YOUR_STREAM_NAME
-
-    aws_key_id YOUR_AWS_ACCESS_KEY
-    aws_sec_key YOUR_SECRET_KEY
-
-    region us-east-1
-
-    partition_key_expr record['action']
+    # You should set the buffer_chunk_limit to substantially less
+    # than the kinesis 1mb record limit, since we ship a chunk at once.
+    buffer_chunk_limit 300k
     </match>
 
 ### Improving throughput to Amazon Kinesis
 
 The achievable throughput to Amazon Kinesis is limited to single-threaded
-PutRecord calls if **order_events** is set to true. By setting **order_events**
-to false records will be sent to Amazon Kinesis in batches. When operating in
-this mode the plugin can also be configured to execute in parallel.
+PutRecord calls, which should be at most around 300kb each.
+The plugin can also be configured to execute in parallel.
 The **detach_process** and **num_threads** configuration settings control
 parallelism.
-
-Please note that **order_events** option will be ignored if you choose to
-use either **detach_process** or **num_threads**.
 
 In case of the configuration below, you will spawn 2 processes.
 
@@ -312,7 +213,7 @@ In case of the configuration below, you will spawn 2 processes.
     region us-east-1
 
     detach_process 2
-
+    buffer_chunk_limit 300k
     </match>
 
 You can also specify a number of threads to put.
@@ -326,6 +227,7 @@ So in this case, you will spawn 1 process which has 50 threads.
     region us-east-1
 
     num_threads 50
+    buffer_chunk_limit 300k
     </match>
 
 Both options can be used together, in the configuration below,
@@ -339,8 +241,9 @@ you will spawn 2 processes and 50 threads per each processes.
 
     detach_process 2
     num_threads 50
+    buffer_chunk_limit 300k
     </match>
 
 ## Related Resources
 
-* [Amazon Kinesis Developer Guide](http://docs.aws.amazon.com/kinesis/latest/dev/introduction.html)  
+* [Amazon Kinesis Developer Guide](http://docs.aws.amazon.com/kinesis/latest/dev/introduction.html)

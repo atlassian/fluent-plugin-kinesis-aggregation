@@ -18,11 +18,11 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "fluent/plugin/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "fluent-plugin-kinesis"
+  spec.name          = "fluent-plugin-kinesis-aggregation"
   spec.version       = FluentPluginKinesis::VERSION
-  spec.author        = 'Amazon Web Services'
-  spec.summary       = %q{Fluentd output plugin that sends events to Amazon Kinesis.}
-  spec.homepage      = "https://github.com/awslabs/aws-fluent-plugin-kinesis"
+  spec.author        = 'Someone'
+  spec.summary       = %q{Fluentd output plugin that sends KPL style aggregated events to Amazon Kinesis.}
+  spec.homepage      = "https://github.com/wryun/fluent-plugin-kinesis-aggregation"
   spec.license       = "Apache License, Version 2.0"
 
   spec.files         = `git ls-files`.split($/)
@@ -37,6 +37,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "fluentd", ">= 0.10.53", "< 0.13"
   spec.add_dependency "aws-sdk-core", ">= 2.0.12", "< 3.0"
-  spec.add_dependency "multi_json", "~> 1.0"
   spec.add_dependency "msgpack", ">= 0.5.8"
+  spec.add_dependency "protobuf", ">= 3.5.5"
 end
