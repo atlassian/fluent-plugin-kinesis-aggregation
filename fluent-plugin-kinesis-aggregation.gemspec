@@ -19,7 +19,7 @@ require "fluent/plugin/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-kinesis-aggregation"
-  spec.version       = FluentPluginKinesis::VERSION
+  spec.version       = FluentPluginKinesisAggregation::VERSION
   spec.author        = 'Someone'
   spec.summary       = %q{Fluentd output plugin that sends KPL style aggregated events to Amazon Kinesis.}
   spec.homepage      = "https://github.com/wryun/fluent-plugin-kinesis-aggregation"

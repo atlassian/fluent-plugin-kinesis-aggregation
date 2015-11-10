@@ -46,7 +46,7 @@ class Record
 end
 
 
-module FluentPluginKinesis
+module FluentPluginKinesisAggregation
   class OutputFilter < Fluent::BufferedOutput
 
     include Fluent::DetachMultiProcessMixin
@@ -149,7 +149,7 @@ module FluentPluginKinesis
 
     # This code is unchanged from https://github.com/awslabs/aws-fluent-plugin-kinesis
     def load_client
-      user_agent_suffix = "#{USER_AGENT_NAME}/#{FluentPluginKinesis::VERSION}"
+      user_agent_suffix = "#{USER_AGENT_NAME}/#{FluentPluginKinesisAggregation::VERSION}"
 
       options = {
         user_agent_suffix: user_agent_suffix
