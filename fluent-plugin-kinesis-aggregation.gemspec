@@ -15,21 +15,19 @@
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
-require "fluent/plugin/version"
-
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-kinesis-aggregation"
-  spec.version       = FluentPluginKinesisAggregation::VERSION
+  spec.version       = '0.1.1'
   spec.author        = 'Someone'
   spec.summary       = %q{Fluentd output plugin that sends KPL style aggregated events to Amazon Kinesis.}
-  spec.homepage      = "https://github.com/wryun/fluent-plugin-kinesis-aggregation"
+  spec.homepage      = "https://github.com/atlassian/fluent-plugin-kinesis-aggregation"
   spec.license       = "Apache License, Version 2.0"
 
   spec.files         = `git ls-files`.split($/)
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
-  spec.required_ruby_version = '>= 1.9.3'
+  spec.required_ruby_version = '>= 2.2'
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake", "~> 10.0"

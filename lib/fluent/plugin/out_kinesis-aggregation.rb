@@ -15,7 +15,6 @@ require 'aws-sdk-core'
 require 'yajl'
 require 'logger'
 require 'securerandom'
-require 'fluent/plugin/version'
 require 'digest'
 
 require 'protobuf'
@@ -53,7 +52,7 @@ module FluentPluginKinesisAggregation
     include Fluent::SetTimeKeyMixin
     include Fluent::SetTagKeyMixin
 
-    USER_AGENT_NAME = 'fluent-plugin-kinesis-aggregation-output-filter'
+    NAME = 'kinesis-aggregation'
     PUT_RECORD_MAX_DATA_SIZE = 1024 * 1024
     # 200 is an arbitrary number more than the envelope overhead
     # and big enough to store partition/hash key table in
@@ -62,7 +61,7 @@ module FluentPluginKinesisAggregation
     # if anyone else is writing to the shard at the time.
     FLUENTD_MAX_BUFFER_SIZE = PUT_RECORD_MAX_DATA_SIZE - 200
 
-    Fluent::Plugin.register_output('kinesis-aggregation', self)
+    Fluent::Plugin.register_output(NAME, self)
 
     config_set_default :include_time_key, true
     config_set_default :include_tag_key,  true
@@ -149,7 +148,7 @@ module FluentPluginKinesisAggregation
 
     # This code is unchanged from https://github.com/awslabs/aws-fluent-plugin-kinesis
     def load_client
-      user_agent_suffix = "#{USER_AGENT_NAME}/#{FluentPluginKinesisAggregation::VERSION}"
+      user_agent_suffix = "fluent-#{NAME}"
 
       options = {
         user_agent_suffix: user_agent_suffix

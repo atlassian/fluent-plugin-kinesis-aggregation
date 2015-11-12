@@ -60,7 +60,7 @@ Below is the sample for specifying your library path via RUBYLIB.
 
 ## Dependencies
 
- * Ruby 1.9.3+
+ * Ruby 2.2+
  * Fluentd 0.10.43+
 
 ## Basic Usage
