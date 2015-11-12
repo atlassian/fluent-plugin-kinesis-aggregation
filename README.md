@@ -1,5 +1,7 @@
 # Fluent Plugin for Amazon Kinesis producing KPL records
 
+[![Build Status](https://travis-ci.org/atlassianlabs/fluent-plugin-kinesis-aggregation.svg?branch=master)](https://travis-ci.org/atlassianlabs/fluent-plugin-kinesis-aggregation)
+
 ## Before you start...
 
 This is a rewrite of [aws-fluent-plugin-kinesis](https://github.com/awslabs/aws-fluent-plugin-kinesis) to implement
