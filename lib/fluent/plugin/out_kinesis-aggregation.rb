@@ -17,32 +17,29 @@ require 'logger'
 require 'securerandom'
 require 'digest'
 
-require 'protobuf'
-require 'protobuf/message'
+require 'google/protobuf'
 
-
-# https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
-class AggregatedRecord < ::Protobuf::Message; end
-class Tag < ::Protobuf::Message; end
-class Record < ::Protobuf::Message; end
-
-class AggregatedRecord
-  repeated :string, :partition_key_table, 1
-  repeated :string, :explicit_hash_key_table, 2
-  repeated ::Record, :records, 3
+Google::Protobuf::DescriptorPool.generated_pool.build do
+  add_message "AggregatedRecord" do
+    repeated :partition_key_table, :string, 1
+    repeated :explicit_hash_key_table, :string, 2
+    repeated :records, :message, 3, "Record"
+  end
+  add_message "Tag" do
+    optional :key, :string, 1
+    optional :value, :string, 2
+  end
+  add_message "Record" do
+    optional :partition_key_index, :uint64, 1
+    optional :explicit_hash_key_index, :uint64, 2
+    optional :data, :bytes, 3
+    repeated :tags, :message, 4, "Tag"
+  end
 end
 
-class Tag
-  required :string, :key, 1
-  optional :string, :value, 2
-end
-
-class Record
-  required :uint64, :partition_key_index, 1
-  optional :uint64, :explicit_hash_key_index, 2
-  required :bytes, :data, 3
-  repeated ::Tag, :tags, 4
-end
+AggregatedRecord = Google::Protobuf::DescriptorPool.generated_pool.lookup("AggregatedRecord").msgclass
+Tag = Google::Protobuf::DescriptorPool.generated_pool.lookup("Tag").msgclass
+Record = Google::Protobuf::DescriptorPool.generated_pool.lookup("Record").msgclass
 
 
 module FluentPluginKinesisAggregation
@@ -104,12 +101,12 @@ module FluentPluginKinesisAggregation
     end
 
     def format(tag, time, record)
-      return AggregatedRecord.new(
+      return AggregatedRecord.encode(AggregatedRecord.new(
         records: [Record.new(
-          partition_key_index: 0,
-          data: Yajl.dump(record)
+          partition_key_index: 1,
+          data: Yajl.dump(record).b
         )]
-      ).encode
+      ))
     end
 
     def write(chunk)
@@ -125,9 +122,17 @@ module FluentPluginKinesisAggregation
       # it's valid (in this case) to concatenate the AggregatedRecords
       # to form one AggregatedRecord, since we only have a repeated field
       # in records.
-      message = AggregatedRecord.new(
-        partition_key_table: [partition_key]
-      ).encode + records
+      #
+      # ALSO, since we use google's protobuf stuff (much better
+      # memory usage due to C extension), we're stuck on proto3.
+      # Unfortunately, KPL uses proto2 form, and partition_key_index
+      # is a required field. If we set it to 0 in proto3, though,
+      # it's helpfully ignored in the serialisation (default!).
+      # Therefore we have to pass a partition_key_index of 1,
+      # and put two things in our partition_key_table.
+      message = AggregatedRecord.encode(AggregatedRecord.new(
+        partition_key_table: ['a', partition_key]
+      )) + records
 
       @client.put_record(
         stream_name: @stream_name,

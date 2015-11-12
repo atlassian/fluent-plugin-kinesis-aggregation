@@ -163,22 +163,20 @@ class KinesisOutputTest < Test::Unit::TestCase
     d.run
   end
 
-  def test_format
+  def test_emitting
     d = create_driver
 
-    data1 = {"test_partition_key"=>"key1","a"=>1,"time"=>"2011-01-02T13:14:15Z","tag"=>"test"}
-    data2 = {"test_partition_key"=>"key2","a"=>2,"time"=>"2011-01-02T13:14:15Z","tag"=>"test"}
+    data1 = {"a"=>1,"time"=>"2011-01-02T13:14:15Z","tag"=>"test"}
+    data2 = {"a"=>2,"time"=>"2011-01-02T13:14:15Z","tag"=>"test"}
 
     time = Time.parse("2011-01-02 13:14:15 UTC").to_i
     d.emit(data1, time)
     d.emit(data2, time)
-    d.expect_format("\u001AR\b\u0000\u001AN{\"test_partition_key\":\"key1\",\"a\":1,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}")
-    d.expect_format("\u001AR\b\u0000\u001AN{\"test_partition_key\":\"key2\",\"a\":2,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}")
 
     client = create_mock_client
     client.put_record(
       stream_name: 'test_stream',
-      data: "\xF3\x89\x9A\xC2\n\x12test_partition_key\x1AR\b\x00\x1AN{\"test_partition_key\":\"key1\",\"a\":1,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\x1AR\b\x00\x1AN{\"test_partition_key\":\"key2\",\"a\":2,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\xB6j\x1E\xF7q\xC9}v\vU\xAD\xA3@<\x82\xA9".force_encoding("ASCII-8BIT"),
+      data: "\xF3\x89\x9A\xC2\n\x01a\n\x12test_partition_key\x1A6\b\x01\x1A2{\"a\":1,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\x1A6\b\x01\x1A2{\"a\":2,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\xA2\x0E y\x8B\x02\xDF\xAE\xAB\x93\x1C;\xCB\xAD\x1Fx".b,
       partition_key: 'test_partition_key'
     ) { {} }
 
@@ -188,20 +186,15 @@ class KinesisOutputTest < Test::Unit::TestCase
   def test_multibyte
     d = create_driver
 
-    data1 = {"test_partition_key"=>"key1","a"=>"\xE3\x82\xA4\xE3\x83\xB3\xE3\x82\xB9\xE3\x83\x88\xE3\x83\xBC\xE3\x83\xAB","time"=>"2011-01-02T13:14:15Z","tag"=>"test"}
-    data1["a"].force_encoding("ASCII-8BIT")
+    data1 = {"a"=>"\xE3\x82\xA4\xE3\x83\xB3\xE3\x82\xB9\xE3\x83\x88\xE3\x83\xBC\xE3\x83\xAB","time"=>"2011-01-02T13:14:15Z".b,"tag"=>"test"}
 
     time = Time.parse("2011-01-02 13:14:15 UTC").to_i
     d.emit(data1, time)
 
-    d.expect_format(
-        "\x1Ae\b\x00\x1Aa{\"test_partition_key\":\"key1\",\"a\":\"\xE3\x82\xA4\xE3\x83\xB3\xE3\x82\xB9\xE3\x83\x88\xE3\x83\xBC\xE3\x83\xAB\",\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}".force_encoding("ASCII-8BIT")
-    )
-
     client = create_mock_client
     client.put_record(
       stream_name: 'test_stream',
-      data: "\xF3\x89\x9A\xC2\n\x12test_partition_key\x1Ae\b\x00\x1Aa{\"test_partition_key\":\"key1\",\"a\":\"\xE3\x82\xA4\xE3\x83\xB3\xE3\x82\xB9\xE3\x83\x88\xE3\x83\xBC\xE3\x83\xAB\",\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\xC8\x13{\xFBL_\x8FE\x02\xEEC\xC9_~\xEF(".force_encoding("ASCII-8BIT"),
+      data: "\xF3\x89\x9A\xC2\n\x01a\n\x12test_partition_key\x1AI\b\x01\x1AE{\"a\":\"\xE3\x82\xA4\xE3\x83\xB3\xE3\x82\xB9\xE3\x83\x88\xE3\x83\xBC\xE3\x83\xAB\",\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}_$\x9C\xF9v+pV:g7c\xE3\xF2$\xBA".b,
       partition_key: 'test_partition_key'
     ) { {} }
 
@@ -212,7 +205,7 @@ class KinesisOutputTest < Test::Unit::TestCase
     d = create_driver
 
     d.emit(
-      {"msg": "z" * 1024 * 1024},
+      {"msg" => "z" * 1024 * 1024},
       Time.parse("2011-01-02 13:14:15 UTC").to_i)
     client = dont_allow(Object.new)
     client.put_record
