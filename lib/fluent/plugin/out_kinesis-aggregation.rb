@@ -17,33 +17,28 @@ require 'logger'
 require 'securerandom'
 require 'digest'
 
-require 'protobuf'
-require 'protobuf/message'
+require 'protocol_buffers'
 
 
 # https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md
-class AggregatedRecord < ::Protobuf::Message; end
-class Tag < ::Protobuf::Message; end
-class Record < ::Protobuf::Message; end
 
-class AggregatedRecord
-  repeated :string, :partition_key_table, 1
-  repeated :string, :explicit_hash_key_table, 2
-  repeated ::Record, :records, 3
-end
-
-class Tag
+class Tag < ProtocolBuffers::Message
   required :string, :key, 1
   optional :string, :value, 2
 end
 
-class Record
+class Record < ProtocolBuffers::Message
   required :uint64, :partition_key_index, 1
   optional :uint64, :explicit_hash_key_index, 2
   required :bytes, :data, 3
-  repeated ::Tag, :tags, 4
+  repeated Tag, :tags, 4
 end
 
+class AggregatedRecord < ProtocolBuffers::Message
+  repeated :string, :partition_key_table, 1
+  repeated :string, :explicit_hash_key_table, 2
+  repeated Record, :records, 3
+end
 
 module FluentPluginKinesisAggregation
   class OutputFilter < Fluent::BufferedOutput
@@ -109,7 +104,7 @@ module FluentPluginKinesisAggregation
           partition_key_index: 0,
           data: Yajl.dump(record)
         )]
-      ).encode
+      ).to_s
     end
 
     def write(chunk)
@@ -127,7 +122,7 @@ module FluentPluginKinesisAggregation
       # in records.
       message = AggregatedRecord.new(
         partition_key_table: [partition_key]
-      ).encode + records
+      ).to_s + records
 
       @client.put_record(
         stream_name: @stream_name,

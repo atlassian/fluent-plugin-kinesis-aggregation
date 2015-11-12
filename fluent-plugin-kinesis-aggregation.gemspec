@@ -36,5 +36,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "fluentd", ">= 0.10.53", "< 0.13"
   spec.add_dependency "aws-sdk-core", ">= 2.0.12", "< 3.0"
   spec.add_dependency "msgpack", ">= 0.5.8"
-  spec.add_dependency "protobuf", ">= 3.5.5"
+  spec.add_dependency "ruby-protocol-buffers", ">= 1.6.1"
+  spec.add_dependency "varint", ">= 0.1.1"
 end
