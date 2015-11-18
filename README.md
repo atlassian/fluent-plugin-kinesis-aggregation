@@ -21,6 +21,9 @@ The basic idea is to have one PutRecord === one chunk. This has a number of adva
 
 However, there are drawbacks:
 
+- if you're using this as an aggregator, you will need to tune the
+  buffer size on your sources fairly low such that it is less
+  that the low buffer_chunk_limit on the aggregator
 - you have to use a KCL library to ingest
 - you can't use a calculated partition key (based on the record);
   essentially, you need to use a random partition key
