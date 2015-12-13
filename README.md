@@ -35,8 +35,15 @@ that sends events to [Amazon Kinesis](https://aws.amazon.com/kinesis/).
 
 ## Installation
 
-In case of using with Fluentd:
-Fluentd will be also installed via the process below.
+This plugin is available as the `fluent-plugin-kinesis-aggregation` gem from RubyGems:
+
+    gem install fluent-plugin-kinesis-aggregation
+
+Or, if using td-agent:
+
+    fluent-gem install fluent-plugin-kinesis-aggregation
+
+To install from the source:
 
     git clone https://github.com/atlassian/fluent-plugin-kinesis-aggregation.git
     cd fluent-plugin-kinesis-aggregation
@@ -44,26 +51,18 @@ Fluentd will be also installed via the process below.
     rake build
     rake install
 
-Also, you can use this plugin with td-agent:
-You have to install td-agent before installing this plugin.
+Or, if using td-agent, replace rake install with:
 
-    git clone https://github.com/atlassian/fluent-plugin-kinesis-aggregation.git
-    cd fluent-plugin-kinesis-aggregation
-    bundle install
-    rake build
     fluent-gem install pkg/fluent-plugin-kinesis-aggregation
 
-Or just download specify your Ruby library path.
-Below is the sample for specifying your library path via RUBYLIB.
+Alternatively, you can replace both the rake steps, and directly
+specify the library path via RUBYLIB:
 
-    git clone https://github.com/atlassian/fluent-plugin-kinesis-aggregation.git
-    cd fluent-plugin-kinesis-aggregation
-    bundle install
     export RUBYLIB=$RUBYLIB:/path/to/fluent-plugin-kinesis-aggregation/lib
 
 ## Dependencies
 
- * Ruby 2.2+
+ * Ruby 2.1+
  * Fluentd 0.10.43+
 
 ## Basic Usage

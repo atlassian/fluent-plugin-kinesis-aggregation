@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Next
+
+- update documentation to refer to published gem
+- turn on testing for Ruby 2.1
+
 ## 0.2.0
 
 - switch to google protobuf library (ruby native one uses too much memory)
