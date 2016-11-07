@@ -112,7 +112,7 @@ module FluentPluginKinesisAggregation
     def write(chunk)
       records = chunk.read
       if records.length > FLUENTD_MAX_BUFFER_SIZE
-        log.error "Can't emit aggregated record of length #{records.length} (more than #{FLUENTD_MAX_BUFFER_SIZE})"
+        log.error "Can't emit aggregated #{@stream_name} stream record of length #{records.length} (more than #{FLUENTD_MAX_BUFFER_SIZE})"
         return # do not throw, since we can't retry
       end
 
