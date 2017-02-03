@@ -34,7 +34,7 @@ class KinesisOutputTest < Test::Unit::TestCase
 
   def create_mock_client
     client = mock(Object.new)
-    mock(Aws::Kinesis::Client).new({}) { client }
+    mock(Aws::Kinesis::Client).new(anything) { client }
     return client
   end
 
@@ -209,7 +209,7 @@ class KinesisOutputTest < Test::Unit::TestCase
       Time.parse("2011-01-02 13:14:15 UTC").to_i)
     client = dont_allow(Object.new)
     client.put_record
-    mock(Aws::Kinesis::Client).new({}) { client }
+    mock(Aws::Kinesis::Client).new(anything) { client }
 
     d.run
   end
