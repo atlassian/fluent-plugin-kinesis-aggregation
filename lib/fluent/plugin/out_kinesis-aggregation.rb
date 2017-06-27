@@ -18,6 +18,7 @@ require 'securerandom'
 require 'digest'
 
 require 'google/protobuf'
+require 'fluent/plugin/output'
 
 Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "AggregatedRecord" do
@@ -43,12 +44,11 @@ Record = Google::Protobuf::DescriptorPool.generated_pool.lookup("Record").msgcla
 
 
 module FluentPluginKinesisAggregation
-  class OutputFilter < Fluent::BufferedOutput
+  class OutputFilter < Fluent::Plugin::Output
 
-    include Fluent::DetachMultiProcessMixin
-    include Fluent::SetTimeKeyMixin
-    include Fluent::SetTagKeyMixin
+    helpers :compat_parameters, :inject
 
+    DEFAULT_BUFFER_TYPE = "memory"
     NAME = 'kinesis-aggregation'
     PUT_RECORD_MAX_DATA_SIZE = 1024 * 1024
     # 200 is an arbitrary number more than the envelope overhead
@@ -81,26 +81,31 @@ module FluentPluginKinesisAggregation
 
     config_param :http_proxy, :string, default: nil
 
+    config_section :buffer do
+      config_set_default :@type, DEFAULT_BUFFER_TYPE
+    end
+
     def configure(conf)
+      compat_parameters_convert(conf, :buffer, :inject)
       super
 
-      if @buffer.chunk_limit > FLUENTD_MAX_BUFFER_SIZE
+      if @buffer.chunk_limit_size > FLUENTD_MAX_BUFFER_SIZE
         raise Fluent::ConfigError, "Kinesis buffer_chunk_limit is set to more than the 1mb shard limit (i.e. you won't be able to write your chunks!"
       end
 
-      if @buffer.chunk_limit > FLUENTD_MAX_BUFFER_SIZE / 3
+      if @buffer.chunk_limit_size > FLUENTD_MAX_BUFFER_SIZE / 3
         log.warn 'Kinesis buffer_chunk_limit is set at more than 1/3 of the per second shard limit (1mb). This is not good if you have many producers.'
       end
     end
 
     def start
-      detach_multi_process do
-        super
-        load_client
-      end
+      super
+      load_client
     end
 
     def format(tag, time, record)
+      record = inject_values_to_record(tag, time, record)
+
       return AggregatedRecord.encode(AggregatedRecord.new(
         records: [Record.new(
           partition_key_index: 1,

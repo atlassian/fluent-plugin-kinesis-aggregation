@@ -14,6 +14,8 @@
 require 'helper'
 
 class KinesisOutputTest < Test::Unit::TestCase
+  include Fluent::Test::Helpers
+
   def setup
     Fluent::Test.setup
   end
@@ -27,14 +29,14 @@ class KinesisOutputTest < Test::Unit::TestCase
     buffer_chunk_limit 100k
   ]
 
-  def create_driver(conf = CONFIG, tag='test')
-    Fluent::Test::BufferedOutputTestDriver
-      .new(FluentPluginKinesisAggregation::OutputFilter, tag).configure(conf)
+  def create_driver(conf = CONFIG)
+    Fluent::Test::Driver::Output
+      .new(FluentPluginKinesisAggregation::OutputFilter).configure(conf)
   end
 
   def create_mock_client
     client = mock(Object.new)
-    mock(Aws::Kinesis::Client).new(anything) { client }
+    stub(Aws::Kinesis::Client).new(anything) { client }
     return client
   end
 
@@ -104,7 +106,7 @@ class KinesisOutputTest < Test::Unit::TestCase
     end
 
     d = create_driver
-    d.run
+    d.run(default_tag: "test")
   end
 
   def test_load_client_with_credentials
@@ -132,7 +134,7 @@ class KinesisOutputTest < Test::Unit::TestCase
       buffer_chunk_limit 100k
     EOS
 
-    d.run
+    d.run(default_tag: "test")
   end
 
   def test_load_client_with_role_arn
@@ -160,7 +162,7 @@ class KinesisOutputTest < Test::Unit::TestCase
       fixed_partition_key test_partition_key
       buffer_chunk_limit 100k
     EOS
-    d.run
+    d.run(default_tag: "test")
   end
 
   def test_emitting
@@ -169,18 +171,19 @@ class KinesisOutputTest < Test::Unit::TestCase
     data1 = {"a"=>1,"time"=>"2011-01-02T13:14:15Z","tag"=>"test"}
     data2 = {"a"=>2,"time"=>"2011-01-02T13:14:15Z","tag"=>"test"}
 
-    time = Time.parse("2011-01-02 13:14:15 UTC").to_i
-    d.emit(data1, time)
-    d.emit(data2, time)
+    time = event_time("2011-01-02 13:14:15 UTC")
 
-    client = create_mock_client
-    client.put_record(
-      stream_name: 'test_stream',
-      data: "\xF3\x89\x9A\xC2\n\x01a\n\x12test_partition_key\x1A6\b\x01\x1A2{\"a\":1,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\x1A6\b\x01\x1A2{\"a\":2,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\xA2\x0E y\x8B\x02\xDF\xAE\xAB\x93\x1C;\xCB\xAD\x1Fx".b,
-      partition_key: 'test_partition_key'
-    ) { {} }
+    d.run(default_tag: "test") do
+      client = create_mock_client
+      stub.instance_of(Aws::Kinesis::Client).put_record(
+        stream_name: 'test_stream',
+        data: "\xF3\x89\x9A\xC2\n\x01a\n\x12test_partition_key\x1A6\b\x01\x1A2{\"a\":1,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\x1A6\b\x01\x1A2{\"a\":2,\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}\xA2\x0E y\x8B\x02\xDF\xAE\xAB\x93\x1C;\xCB\xAD\x1Fx".b,
+        partition_key: 'test_partition_key'
+      ) { {} }
 
-    d.run
+      d.feed(time, data1)
+      d.feed(time, data2)
+    end
   end
 
   def test_multibyte
@@ -188,29 +191,32 @@ class KinesisOutputTest < Test::Unit::TestCase
 
     data1 = {"a"=>"\xE3\x82\xA4\xE3\x83\xB3\xE3\x82\xB9\xE3\x83\x88\xE3\x83\xBC\xE3\x83\xAB","time"=>"2011-01-02T13:14:15Z".b,"tag"=>"test"}
 
-    time = Time.parse("2011-01-02 13:14:15 UTC").to_i
-    d.emit(data1, time)
 
-    client = create_mock_client
-    client.put_record(
-      stream_name: 'test_stream',
-      data: "\xF3\x89\x9A\xC2\n\x01a\n\x12test_partition_key\x1AI\b\x01\x1AE{\"a\":\"\xE3\x82\xA4\xE3\x83\xB3\xE3\x82\xB9\xE3\x83\x88\xE3\x83\xBC\xE3\x83\xAB\",\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}_$\x9C\xF9v+pV:g7c\xE3\xF2$\xBA".b,
-      partition_key: 'test_partition_key'
-    ) { {} }
+    time = event_time("2011-01-02 13:14:15 UTC")
+    d.run(default_tag: "test") do
+      client = create_mock_client
+      stub.instance_of(Aws::Kinesis::Client).put_record(
+        stream_name: 'test_stream',
+        data: "\xF3\x89\x9A\xC2\n\x01a\n\x12test_partition_key\x1AI\b\x01\x1AE{\"a\":\"\xE3\x82\xA4\xE3\x83\xB3\xE3\x82\xB9\xE3\x83\x88\xE3\x83\xBC\xE3\x83\xAB\",\"time\":\"2011-01-02T13:14:15Z\",\"tag\":\"test\"}_$\x9C\xF9v+pV:g7c\xE3\xF2$\xBA".b,
+        partition_key: 'test_partition_key'
+      ) { {} }
 
-    d.run
+      d.feed(time, data1)
+    end
   end
 
   def test_fail_on_bigchunk
     d = create_driver
 
-    d.emit(
-      {"msg" => "z" * 1024 * 1024},
-      Time.parse("2011-01-02 13:14:15 UTC").to_i)
-    client = dont_allow(Object.new)
-    client.put_record
-    mock(Aws::Kinesis::Client).new(anything) { client }
-
-    d.run
+    assert_raise(Fluent::Plugin::Buffer::BufferChunkOverflowError) do
+      d.run(default_tag: "test") do
+        d.feed(
+          event_time("2011-01-02 13:14:15 UTC"),
+          {"msg" => "z" * 1024 * 1024})
+        client = dont_allow(Object.new)
+        client.put_record
+        mock(Aws::Kinesis::Client).new(anything) { client }
+      end
+    end
   end
 end
