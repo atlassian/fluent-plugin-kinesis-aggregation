@@ -17,11 +17,12 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-kinesis-aggregation"
-  spec.version       = '0.2.3'
+  spec.version       = '0.3.0'
   spec.author        = 'Atlassian'
+  spec.email         = 'jhaggerty@atlassian.com'
   spec.summary       = %q{Fluentd output plugin that sends KPL style aggregated events to Amazon Kinesis.}
   spec.homepage      = "https://github.com/atlassian/fluent-plugin-kinesis-aggregation"
-  spec.license       = "Apache License, Version 2.0"
+  spec.license       = "Apache-2.0"
 
   spec.files         = `git ls-files`.split($/)
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
@@ -35,6 +36,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "fluentd", [">= 0.14.15", "< 2"]
   spec.add_dependency "aws-sdk-core", ">= 2.0.12", "< 3.0"
-  spec.add_dependency "msgpack", ">= 0.5.8"
-  spec.add_dependency "google-protobuf", ">= 3.0.0.alpha.4.0"
+  spec.add_dependency "msgpack", "~> 1.0"
+  spec.add_dependency "google-protobuf", "~> 3.0"
 end
