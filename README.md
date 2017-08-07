@@ -75,7 +75,7 @@ specify the library path via RUBYLIB:
 ## Dependencies
 
  * Ruby 2.1+
- * Fluentd 0.10.43+
+ * Fluentd 0.14.15+ (if you need 0.10 or 0.12 support, use the fluentd-v0.12 branch or version 0.2.x on rubygems)
 
 ## Basic Usage
 

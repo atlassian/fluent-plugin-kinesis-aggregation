@@ -36,6 +36,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "fluentd", [">= 0.14.15", "< 2"]
   spec.add_dependency "aws-sdk-core", ">= 2.0.12", "< 3.0"
-  spec.add_dependency "msgpack", "~> 1.0"
   spec.add_dependency "google-protobuf", "~> 3.0"
 end
