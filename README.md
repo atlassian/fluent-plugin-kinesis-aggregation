@@ -11,9 +11,9 @@ a different shipment method using the
 *Since this plugin was forked, aws-fluent-plugin-kinesis has undergone considerable development (and improvement).
 Most notably, the upcoming 2.0 release supports KPL aggregated records using google-protobuf without
 the overhead of using the KPL:
-https://github.com/awslabs/aws-fluent-plugin-kinesis/issues/107
+https://github.com/awslabs/aws-fluent-plugin-kinesis/issues/107*
 
-However, it still uses msgpack for internal buffering and only uses protobuf when it ships the records,
+*However, it still uses msgpack for internal buffering and only uses protobuf when it ships the records,
 whereas this plugin processes each record as it comes in and ships the result by simple concatenation
 of the encoded records. This may not be faster, of course - could depend on the overhead of calling
 the protobuf methods - but most probably is. The discussion below is also still mostly valid,
