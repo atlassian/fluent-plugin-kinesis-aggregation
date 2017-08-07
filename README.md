@@ -8,14 +8,26 @@ This is a rewrite of [aws-fluent-plugin-kinesis](https://github.com/awslabs/aws-
 a different shipment method using the
 [KPL aggregation format](https://github.com/awslabs/amazon-kinesis-producer/blob/master/aggregation-format.md).
 
+*Since this plugin was forked, aws-fluent-plugin-kinesis has undergone considerable development (and improvement).
+Most notably, the upcoming 2.0 release supports KPL aggregated records using google-protobuf without
+the overhead of using the KPL:
+https://github.com/awslabs/aws-fluent-plugin-kinesis/issues/107
+
+However, it still uses msgpack for internal buffering and only uses protobuf when it ships the records,
+whereas this plugin processes each record as it comes in and ships the result by simple concatenation
+of the encoded records. This may not be faster, of course - could depend on the overhead of calling
+the protobuf methods - but most probably is. The discussion below is also still mostly valid,
+in that the awslabs plugin does not have PutRecord == chunk equivalency, but instead has its
+own internal retry method.*
+
 The basic idea is to have one PutRecord === one chunk. This has a number of advantages:
 
 - much less complexity in plugin (less CPU/memory)
 - by aggregating, we increase the throughput and decrease the cost
 - since a single chunk either succeeds or fails,
   we get to use fluentd's more complex/complete retry mechanism
-  (which is also exposed in the monitor). The existing retry mechanism
-  has [unfortunate issues under heavy load](https://github.com/awslabs/aws-fluent-plugin-kinesis/issues/42)
+  (which is also exposed by the monitor plugin; we view this in datadog). The existing retry mechanism
+  had [unfortunate issues under heavy load](https://github.com/awslabs/aws-fluent-plugin-kinesis/issues/42)
 - we get ordering within a chunk without having to rely on sequence
   numbers (though not overall ordering)
 
