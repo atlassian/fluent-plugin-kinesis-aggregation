@@ -145,24 +145,28 @@ forces all writes to a specific shard, and if you're using
 a single thread/process will probably keep event ordering
 (not recommended - watch out for hot shards!).
 
-### detach_process
-
-Integer. Optional. This defines the number of parallel processes to start.
-This can be used to increase throughput by allowing multiple processes to
-execute the plugin at once. Setting this option to > 0 will cause the plugin
-to run in a separate process. The default is 0.
-
 ### num_threads
 
 Integer. The number of threads to flush the buffer. This plugin is based on
-Fluentd::BufferedOutput, so we buffer incoming records before emitting them to
+Fluentd::Plugin::Output, so we buffer incoming records before emitting them to
 Amazon Kinesis. You can find the detail about buffering mechanism [here](http://docs.fluentd.org/articles/buffer-plugin-overview).
 Emitting records to Amazon Kinesis via network causes I/O Wait, so parallelizing
 emitting with threads will improve throughput.
 
 This option can be used to parallelize writes into the output(s)
 designated by the output plugin. The default is 1.
-Also you can use this option with *detach_process*.
+Also you can use this option with *multi workers*.
+
+### multi workers
+
+This feature is introduced in Fluentd v0.14.
+Instead of using *detach_process*, this feature can use as the following system directive.
+Note that *detach_process* parameter is removed after using v0.14 Output Plugin API.
+The default is 1.
+
+    <system>
+      workers 5
+    </system>
 
 ### debug
 
