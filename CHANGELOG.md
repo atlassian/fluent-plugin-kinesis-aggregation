@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.3.1
+
+- Change aws-sdk usage to work with both v2 and v3
+  (in particular, makes it possible to use latest td-agent which includes the s3 plugin
+  and pulls in aws-sdk v3)
+
 ## 0.3.0
 
 - Update to use fluentd 0.14 API (stick to 0.2.3 if you need support for earlier versions of fluentd)
