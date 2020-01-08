@@ -35,6 +35,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "test-unit-rr", "~> 1.0"
 
   spec.add_dependency "fluentd", [">= 0.14.15", "< 2"]
-  spec.add_dependency "aws-sdk", ">= 2.0.12", "< 4.0"
+  spec.add_dependency "aws-sdk-kinesis", "~> 1", "!= 1.4", "!= 1.5", "!= 1.14"
   spec.add_dependency "google-protobuf", "~> 3.0"
 end
