@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.3.2
+
+- Modify aws-sdk usage to require just the API/SDK resources for Kinesis
+- Drop support and testing for deprecated Ruby versions (<2.3)
+
 ## 0.3.1
 
 - Change aws-sdk usage to work with both v2 and v3
