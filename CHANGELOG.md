@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.3.3
+
+- Dependency google-protobuf 3.12.0 dropped support for Ruby <2.5; td-agent3 bundles Ruby 2.4, so google-protobuf is now pinned to 3.11.x.
+
 ## 0.3.2
 
 - Modify aws-sdk usage to require just the API/SDK resources for Kinesis
