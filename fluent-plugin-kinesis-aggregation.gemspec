@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-kinesis-aggregation"
   spec.version       = '0.3.3'
   spec.author        = 'Atlassian'
-  spec.email         = 'jhaggerty@atlassian.com'
+  spec.email         = 'lgoolsbee@atlassian.com'
   spec.summary       = %q{Fluentd output plugin that sends KPL style aggregated events to Amazon Kinesis.}
   spec.homepage      = "https://github.com/atlassian/fluent-plugin-kinesis-aggregation"
   spec.license       = "Apache-2.0"
