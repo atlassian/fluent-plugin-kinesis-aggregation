@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.3.4
+
+- aws-sdk-kinesis 1.24 is missing a dependency from a newer version of the aws-sdk-core gem; 1.24 has been yanked and 1.24.1 has been released with the fix, but just in case 1.24 has already been installed/cached anywhere, add it to the list of excluded versions.
+- Previously, we pinned google-protobuf to 3.11.x because 3.12 required Ruby >=2.5 (and td-agent ships with Ruby 2.4 embedded). google-protobuf 3.12.1 restores support for Ruby 2.3 and 2.4, so we can relax our pinning for this dependency a bit by requiring versions greater than 3.12.
+
 ## 0.3.3
 
 - Dependency google-protobuf 3.12.0 dropped support for Ruby <2.5; td-agent3 bundles Ruby 2.4, so google-protobuf is now pinned to 3.11.x.
