@@ -134,7 +134,10 @@ class KinesisOutputTest < Test::Unit::TestCase
       buffer_chunk_limit 100k
     EOS
 
-    d.run(default_tag: "test")
+    begin
+      d.run(default_tag: "test")
+    rescue Aws::Errors::NoSuchProfileError
+    end
   end
 
   def test_load_client_with_role_arn
