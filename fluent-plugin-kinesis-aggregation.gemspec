@@ -17,7 +17,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-kinesis-aggregation"
-  spec.version       = '0.4.0'
+  spec.version       = '0.4.1'
   spec.author        = 'Atlassian'
   spec.email         = 'lgoolsbee@atlassian.com'
   spec.summary       = %q{Fluentd output plugin that sends KPL style aggregated events to Amazon Kinesis.}

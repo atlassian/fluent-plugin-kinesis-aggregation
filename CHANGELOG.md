@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.4.1
+
+- Update dependency google-protobuf to require versions newer than 3.12.0; older versions are incompatible with td-agent v4
+
 ## 0.4.0
 
 - Update dependencies to support td-agent v4 ([td-agent v3 is EOL](https://www.fluentd.org/blog/schedule-for-td-agent-3-eol)); if you need td-agent v3 support, use 0.3.x from rubygems
