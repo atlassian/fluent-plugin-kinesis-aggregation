@@ -37,5 +37,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "fluentd", ["~> 1", "< 2"]
   spec.add_dependency "aws-sdk-kinesis", "~> 1", "!= 1.4", "!= 1.5", "!= 1.14", "!= 1.24"
-  spec.add_dependency "google-protobuf", "~> 3", "!= 3.12.0"
+  spec.add_dependency "google-protobuf", "~> 3", ">= 3.12.1"
 end
