@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.4.0
+
+- Update dependencies to support td-agent v4 ([td-agent v3 is EOL](https://www.fluentd.org/blog/schedule-for-td-agent-3-eol)); if you need td-agent v3 support, use 0.3.x from rubygems
+- Drop testing and support for Ruby versions less than 2.7 (version embedded with td-agent v4)
+
 ## 0.3.4
 
 - aws-sdk-kinesis 1.24 is missing a dependency from a newer version of the aws-sdk-core gem; 1.24 has been yanked and 1.24.1 has been released with the fix, but just in case 1.24 has already been installed/cached anywhere, add it to the list of excluded versions.
