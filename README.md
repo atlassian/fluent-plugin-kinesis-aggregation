@@ -53,7 +53,7 @@ This plugin is available as the `fluent-plugin-kinesis-aggregation` gem from Rub
 
 Or, if using td-agent:
 
-    fluent-gem install fluent-plugin-kinesis-aggregation
+    td-agent-gem install fluent-plugin-kinesis-aggregation
 
 To install from the source:
 
@@ -74,8 +74,10 @@ specify the library path via RUBYLIB:
 
 ## Dependencies
 
- * Ruby 2.1+
- * Fluentd 0.14.15+ (if you need 0.10 or 0.12 support, use the fluentd-v0.12 branch or version 0.2.x on rubygems)
+ * Ruby 2.7+
+ * Fluentd 1+
+
+If you need td-agent v3 support, use version 0.3.x on rubygems. If you need td-agent v2 support (or fluentd 0.10 or 0.12 support), use the fluentd-v0.12 branch or version 0.2.x on rubygems.
 
 ## Basic Usage
 

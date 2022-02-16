@@ -28,14 +28,14 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
-  spec.required_ruby_version = '>= 2.3'
+  spec.required_ruby_version = '>= 2.7'
 
-  spec.add_development_dependency "bundler", ">= 1.10"
-  spec.add_development_dependency "rake", ">= 10.0"
-  spec.add_development_dependency "test-unit", ">= 3.0.8"
-  spec.add_development_dependency "test-unit-rr", ">= 1.0.3"
+  spec.add_development_dependency "bundler", "~> 2"
+  spec.add_development_dependency "rake", "~> 13"
+  spec.add_development_dependency "test-unit", "~> 3"
+  spec.add_development_dependency "test-unit-rr", "~> 1"
 
-  spec.add_dependency "fluentd", [">= 0.14.22", "< 2"]
+  spec.add_dependency "fluentd", ["~> 1", "< 2"]
   spec.add_dependency "aws-sdk-kinesis", "~> 1", "!= 1.4", "!= 1.5", "!= 1.14", "!= 1.24"
-  spec.add_dependency "google-protobuf", "~> 3", "< 3.12"
+  spec.add_dependency "google-protobuf", "~> 3", "!= 3.12.0"
 end
